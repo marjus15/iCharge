@@ -26,6 +26,8 @@ export default makeStyles((theme) => ({
     overflow: "auto",
   },
   title: {
+    fontSize: ".8rem",
+    fontFamily: `'Raleway', sans-serif`,
     align: "center",
   },
 }));

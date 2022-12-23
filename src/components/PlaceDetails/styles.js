@@ -1,8 +1,15 @@
 import { makeStyles } from "@material-ui/core/styles";
+import { default as BackgroundCard } from "../../images/undraw_destination_re_sr74.svg";
 
 export default makeStyles(() => ({
   chip: {
     margin: "5px 5px 5px 0",
+  },
+  ChargeName: {
+    fontWeight: "400",
+    fontFamily: "-apple-system",
+    fontDisplay: "swap",
+    textAlign: "center",
   },
   subtitle: {
     display: "flex",
@@ -17,7 +24,7 @@ export default makeStyles(() => ({
   },
   selectedCard: {
     transition: "0.3s",
-    backgroundColor: "#ACBED8",
+    backgroundImage: `url(${BackgroundCard})`,
   },
   title: {
     align: "center",

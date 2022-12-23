@@ -6,14 +6,25 @@ export default makeStyles((theme) => ({
     marginBottom: "30px",
     display: "block",
   },
+  autocompleteBoxes: {
+    marginTop: "1rem",
+    marginLeft: "1rem",
+    marginRight: "1rem",
+  },
+  intermedited: {
+    marginTop: "1rem",
+    marginLeft: "1rem",
+    marginBottom: "1rem",
+  },
   dropdowns: {
-    width: "100%",
+    width: "80%",
+    marginLeft: "10%",
     justifyContent: "space-between",
     textAlign: "center",
     marginBottom: "2rem",
   },
   root: {
-    width: "100%",
+    width: "70%",
     justifyContent: "space-between",
     textAlign: "center",
     marginBottom: "2rem",
@@ -29,6 +40,9 @@ export default makeStyles((theme) => ({
   label: {
     marginBottom: "0.8rem",
     fontWeight: "600",
+  },
+  buttonCalculate: {
+    margintop: "10rem",
   },
   labelRange: {
     fontWeight: "600",
@@ -52,6 +66,27 @@ export default makeStyles((theme) => ({
   list: {
     height: "75vh",
     overflow: "auto",
+  },
+  logo: {
+    width: "20%",
+    marginLeft: "40%",
+    marginBottom: "20px",
+  },
+  card: {
+    maxWidth: "100%",
+    margin: "auto",
+    transition: "0.3s",
+    // boxShadow: "0 8px 40px -12px rgba(0,0,0,0.3)",
+    // "&:hover": {
+    //   boxShadow: "0 16px 70px -12.125px rgba(0,0,0,0.3)",
+    // },
+  },
+  subheading: {
+    lineHeight: 1.8,
+  },
+  filterCard: {
+    marginLeft: "10%",
+    width: "80%",
   },
   toggle: {
     fontFamily: `'Raleway', sans-serif`,

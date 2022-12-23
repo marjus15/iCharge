@@ -6,9 +6,10 @@ import { makeStyles } from "@material-ui/core/styles";
 const useStyles = makeStyles({
   root: {
     width: "30%",
-    justifyContent: "space-evenly",
+    justifyContent: "space-between",
   },
   toggle: {
+    marginLeft: "10%",
     fontFamily: `'Raleway', sans-serif`,
     fontSize: ".8rem",
     border: "1px solid rgba(0, 0, 0, 0.12)",

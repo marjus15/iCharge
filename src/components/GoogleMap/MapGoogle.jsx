@@ -1,66 +1,34 @@
-import React, { useState, useEffect, createRef, useRef } from "react";
+import React from "react";
 import {
-  Box,
-  Button,
-  ButtonGroup,
-  Flex,
-  HStack,
-  IconButton,
-  Input,
-  SkeletonText,
-  Text,
-} from "@chakra-ui/react";
-import { FaLocationArrow, FaTimes } from "react-icons/fa";
-
-import {
-  useJsApiLoader,
   GoogleMap,
   Marker,
-  Autocomplete,
   DirectionsRenderer,
   MarkerClusterer,
 } from "@react-google-maps/api";
 import useStyles from "./styles";
-import mapStyles from "../Map/mapStyles";
+import mapStyles from "./mapStyles";
+import { Box, HStack } from "@chakra-ui/react";
+import { Paper, Typography } from "@material-ui/core";
 
 function MapGoogle({
   setCoordinates,
-  setBounds,
   coordinates,
-  places,
   setChildClicked,
-  weatherData,
   charges,
-  apiIsLoaded,
-  destiantionRef,
-  originRef,
-  calculateRoute,
-  clearRoute,
-  distance,
-  duration,
-  map,
   setMap,
   directionsResponse,
+  setChargerCoords,
+  setBetweenStop,
+  setOpen,
 }) {
   const classes = useStyles();
-  const { isLoaded } = useJsApiLoader({
-    googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY,
-    libraries: ["places"],
-  });
-
-  // const markerHandler = (e) => {
-  //   console.log(e);
-  //   setCoordinates({
-  //     lat: e.center.lat,
-  //     lng: e.center.lng,
-  //   });
-  //   setBounds({ ne: e.marginBounds.ne, sw: e.marginBounds.sw });
-  // };
+  console.log(coordinates);
 
   return (
     <div className={classes.mapContainer}>
       {/* Google Map Box */}
       <GoogleMap
+        bootstrapURLKeys={{ key: process.env.REACT_APP_GOOGLE_MAPS_API_KEY }}
         center={coordinates}
         margin={[50, 50, 50, 50]}
         zoom={7}
@@ -72,21 +40,12 @@ function MapGoogle({
         }}
         onChildClick={(child) => setChildClicked(child)}
         onClick={(ev, i) => {
-          console.log(ev);
           setCoordinates({
             lat: ev.latLng.lat(),
             lng: ev.latLng.lng(),
           });
           // setBounds({ ne: ev.marginBounds.ne, sw: ev.marginBounds.sw });
         }}
-        // onChange={(e) => {
-        //   console.log(e);
-        //   setCoordinates({
-        //     lat: e.center.lat,
-        //     lng: e.center.lng,
-        //   });
-        //   setBounds({ ne: e.marginBounds.ne, sw: e.marginBounds.sw });
-        // }}
         onLoad={(map) => setMap(map)}
       >
         <MarkerClusterer>
@@ -94,7 +53,17 @@ function MapGoogle({
             charges?.map((charge, i) => (
               <Marker
                 onClick={() => {
-                  console.log(i);
+                  setOpen(true);
+                  setBetweenStop({
+                    charge,
+                  });
+
+                  // setSelectedCategory("explore");
+                  setChargerCoords({
+                    // location: charge.AddressInfo,
+                    lat: charge.AddressInfo.Latitude.toFixed(7),
+                    lng: charge.AddressInfo.Longitude.toFixed(7),
+                  });
                   setChildClicked(i);
                 }}
                 key={i}
@@ -107,9 +76,9 @@ function MapGoogle({
             ))
           }
         </MarkerClusterer>
-        {}
+
         <Marker position={coordinates} />
-        {directionsResponse && (
+        {directionsResponse !== null && (
           <DirectionsRenderer directions={directionsResponse} />
         )}
       </GoogleMap>

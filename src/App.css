@@ -40,3 +40,8 @@
     transform: rotate(360deg);
   }
 }
+
+.list {
+  height: "75vh";
+  overflow: "auto";
+}

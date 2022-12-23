@@ -1,57 +1,44 @@
-import React, { useState, useEffect, createRef } from "react";
-import { FaLocationArrow, FaTimes } from "react-icons/fa";
+import React, { useEffect, createRef } from "react";
+import { FaLocationArrow, FaTimes, FaRoad } from "react-icons/fa";
+import { NotificationOutlined } from "@ant-design/icons";
+import { notification, Drawer, Radio, Space } from "antd";
+import PlaceDetails from "../PlaceDetails/PlaceDetails";
+import { BiTimer } from "react-icons/bi";
 import Select from "@material-ui/core/Select/Select";
 import MenuItem from "@material-ui/core/MenuItem/MenuItem";
 import {
   CircularProgress,
-  Grid,
   Typography,
-  InputLabel,
-  FormControl,
   Card,
-  Slider,
   CardContent,
-  InputBase,
+  Grid,
 } from "@material-ui/core";
 import {
   Box,
-  Button,
   ButtonGroup,
-  Flex,
   HStack,
+  Button,
   IconButton,
   Input,
-  SkeletonText,
-  Text,
 } from "@chakra-ui/react";
-import {
-  useJsApiLoader,
-  GoogleMap,
-  Marker,
-  Autocomplete,
-  DirectionsRenderer,
-} from "@react-google-maps/api";
-import DropDown from "../DropDown/Index";
+import { Autocomplete } from "@react-google-maps/api";
 import useStyles from "./styles";
-import SearchIcon from "@material-ui/icons/Search";
-import ToggleButton from "@material-ui/lab/ToggleButton";
+
+import { useState } from "react";
 
 const FilterPanel = ({
   isLoading,
-  getChargesData,
+  childClicked,
+  charges,
   destiantionRef,
+  waypoints,
   originRef,
   calculateRoute,
   clearRoute,
   distance,
   duration,
-  map,
-  coordinates,
-  setCoordinates,
   markList,
-  setMarkList,
   modelList,
-  setModelList,
   selectedMark,
   setSelectedMark,
   selectedModel,
@@ -59,8 +46,53 @@ const FilterPanel = ({
   onBlur,
   onFocus,
   selectedModelDetails,
+  showDistance,
+  betweenStop,
+  setOpen,
+  open,
 }) => {
+  console.log(betweenStop);
+  const [elRefs, setElRefs] = useState([]);
+
+  useEffect(() => {
+    const refs = Array(betweenStop.charge?.length)
+      .fill()
+      .map((_, i) => elRefs[i] || createRef());
+
+    setElRefs(refs);
+  }, [charges]);
+
+  // const [placement, setPlacement] = useState("right");
+  // const showDrawer = () => {
+  //   setOpen(true);
+  // };
+
+  const onClose = () => {
+    setOpen(false);
+  };
+
+  const [api, contextHolder] = notification.useNotification();
+  const openNotification = (placement) => {
+    api.info({
+      duration: 10,
+      message: "Choose your intermediate stop",
+      description:
+        "If you want to calculate cost and time please choose a charger from map",
+      icon: (
+        <NotificationOutlined
+          style={{
+            color: "#da2c38",
+          }}
+        />
+      ),
+      placement,
+      style: { backgroundColor: "#e6f7ff" },
+    });
+  };
   const classes = useStyles();
+
+  const [calculateClicked, setCalculateClicked] = useState(false);
+  const [destinationChange, setDestinationChange] = useState("");
 
   const handleFocus = () => {
     if (onFocus) {
@@ -73,8 +105,6 @@ const FilterPanel = ({
       onBlur(e.target.value);
     }
   };
-
-  console.log(selectedModelDetails.First100M);
 
   // const [autocompleteOrigin, setAutocompleteOrigin] = useState(null);
   // const [autocompleteDestination, setAutocompleteDestination] = useState(null);
@@ -100,7 +130,8 @@ const FilterPanel = ({
 
   return (
     <div className={classes.container}>
-      <Typography variant="h4">Plan your Trip in Greece</Typography>
+      {contextHolder}
+      <Typography variant="overline">Plan your Trip in Greece</Typography>
       {isLoading ? (
         <div className={classes.loading}>
           <CircularProgress size="5rem" />
@@ -108,65 +139,13 @@ const FilterPanel = ({
       ) : (
         <>
           <div className={classes.inputGroup}>
-            {/* <Box>
-              <Autocomplete
-                onLoad={onLoadOrigin}
-                onPlaceChanged={onPlaceChangedOrigin}
-              >
-                <div className={classes.search}>
-                  <div className={classes.searchIcon}>
-                    <SearchIcon />
-                  </div>
-                  <InputBase
-                    placeholder="Search..."
-                    classes={{
-                      root: classes.inputRoot,
-                      input: classes.inputInput,
-                    }}
-                  />
-                </div>
-              </Autocomplete>
-            </Box>
-            <Box>
-              <Autocomplete
-                onLoad={onLoadDestination}
-                onPlaceChanged={onPlaceChangedDestination}
-              >
-                <div className={classes.search}>
-                  <div className={classes.searchIcon}>
-                    <SearchIcon />
-                  </div>
-                  <InputBase
-                    placeholder="Search..."
-                    classes={{
-                      root: classes.inputRoot,
-                      input: classes.inputInput,
-                    }}
-                  />
-                </div>
-              </Autocomplete>
-            </Box> */}
-            {/* <p className={classes.labelRange}>Your Car </p>
-            <Select
-              className={classes.root}
-              value={selectedMark}
-              onChange={(e) => {
-                console.log(e.target.value);
-                setSelectedMark(e.target.value);
-              }}
-            >
-              {markList?.map((mark) => {
-                return (
-                  <MenuItem key={mark.value} value={mark.value}>
-                    {mark.label ?? mark.value}
-                  </MenuItem>
-                );
-              })}
-            </Select> */}
             <div className={classes.inputGroup}>
-              <InputLabel id="demo-simple-select-autowidth-label">
+              <Typography
+                variant="overline"
+                id="demo-simple-select-autowidth-label"
+              >
                 Select your car
-              </InputLabel>
+              </Typography>
               <Select
                 labelId="demo-simple-select-autowidth-label"
                 id="demo-simple-select-autowidth"
@@ -177,6 +156,7 @@ const FilterPanel = ({
                 onChange={(e) => {
                   console.log(e.target.value);
                   setSelectedMark(e.target.value);
+                  setSelectedModel("");
                 }}
               >
                 {markList?.map((x, i) => {
@@ -208,148 +188,205 @@ const FilterPanel = ({
               </Select>
               <br />
             </div>
-            <Card
-              elevation={6}
-              // className={selected === true ? classes.selectedCard : false}
-            >
-              {/* <CardMedia
-        style={{ height: 350 }}
-        image={
-          place.photo
-            ? place.photo.images.large.url
-            : "https://www.foodserviceandhospitality.com/wp-content/uploads/2016/09/Restaurant-Placeholder-001.jpg"
-        }
-        title={place.name}
-      /> */}
-              <CardContent>
-                <Typography gutterBottom variant="overline">
-                  Battery Electric Vehicle |{" "}
-                  <strong>
-                    {selectedModelDetails?.BatteryElectricVehicle}
-                  </strong>{" "}
-                  kWh
-                </Typography>
-                <Box display="flex" justifyContent="space-between">
+            {selectedModel !== "" ? (
+              <Card className={classes.card}>
+                <CardContent>
                   <Typography gutterBottom variant="overline">
-                    Top Speed |{" "}
-                    <strong>{selectedModelDetails?.TopSpeed}</strong> km/h
+                    Battery Electric Vehicle |{" "}
+                    <strong>
+                      {selectedModelDetails?.BatteryElectricVehicle}
+                    </strong>{" "}
+                    kWh
                   </Typography>
-                </Box>
-                <Box display="flex" justifyContent="space-between">
-                  <Typography gutterBottom variant="overline">
-                    Range |<strong> {selectedModelDetails?.Range}</strong> km
-                  </Typography>
-                </Box>
-                <Box display="flex" justifyContent="space-between">
-                  <Typography gutterBottom variant="overline">
-                    0-100 |<strong> {selectedModelDetails?.First100M}</strong>{" "}
-                    sec
-                  </Typography>
-                </Box>
-                <Box display="flex" justifyContent="space-between">
-                  <Typography gutterBottom variant="overline">
-                    Efficiency |
-                    <strong> {selectedModelDetails?.Efficiency}</strong> Wh/km
-                  </Typography>
-                </Box>
-                <Box display="flex" justifyContent="space-between">
-                  <Typography gutterBottom variant="overline">
-                    Fastcharge |
-                    <strong> {selectedModelDetails?.Fastcharge}</strong> km/h
-                  </Typography>
-                </Box>
-              </CardContent>
-            </Card>
+                  <Box display="flex" justifyContent="space-between">
+                    <Typography gutterBottom variant="overline">
+                      Top Speed |{" "}
+                      <strong>{selectedModelDetails?.TopSpeed}</strong> km/h
+                    </Typography>
+                  </Box>
+                  <Box display="flex" justifyContent="space-between">
+                    <Typography gutterBottom variant="overline">
+                      Range |<strong> {selectedModelDetails?.Range}</strong> km
+                    </Typography>
+                  </Box>
+                  <Box display="flex" justifyContent="space-between">
+                    <Typography gutterBottom variant="overline">
+                      0-100 |<strong> {selectedModelDetails?.First100M}</strong>{" "}
+                      sec
+                    </Typography>
+                  </Box>
+                  <Box display="flex" justifyContent="space-between">
+                    <Typography gutterBottom variant="overline">
+                      Efficiency |
+                      <strong> {selectedModelDetails?.Efficiency}</strong> Wh/km
+                    </Typography>
+                  </Box>
+                  <Box display="flex" justifyContent="space-between">
+                    <Typography gutterBottom variant="overline">
+                      Fastcharge |
+                      <strong> {selectedModelDetails?.Fastcharge}</strong> km/h
+                    </Typography>
+                  </Box>
+                </CardContent>
+              </Card>
+            ) : (
+              <div></div>
+            )}
           </div>
-          {/* Range Battery */}
-          <div className={classes.inputGroup}>
-            <p className={classes.labelRange}>Range Battery (km)</p>
-            {/* <SliderProton value={selectedPrice} changedPrice={changedPrice} /> */}
-            <Slider
-              aria-label="Temperature"
-              defaultValue={100}
-              valueLabelDisplay="auto"
-              step={1}
-              marks
-              min={100}
-              max={800}
-            />
-          </div>
-          <div className="input-group">
-            <p className={classes.labelRange}>Persons in the car</p>
-            <Slider
-              aria-label="Temperature"
-              defaultValue={1}
-              valueLabelDisplay="auto"
-              step={1}
-              marks
-              min={1}
-              max={5}
-            />
-          </div>
-          <div className={classes.inputGroup}>
-            <p className={classes.labelRange}>
-              Percentage of battery on starting the journey (%)
-            </p>
-            <Slider
-              aria-label="Temperature"
-              defaultValue={1}
-              valueLabelDisplay="auto"
-              step={10}
-              marks
-              min={10}
-              max={100}
-            />
-          </div>
-          <div className={classes.inputGroup}>
-            <HStack spacing={2} justifyContent="space-between">
-              <Box flexGrow={1}>
-                <Autocomplete>
-                  <Input type="text" placeholder="Origin" ref={originRef} />
-                </Autocomplete>
-              </Box>
-              <Box flexGrow={1}>
-                <Autocomplete>
-                  <Input
-                    type="text"
-                    placeholder="Destination"
-                    ref={destiantionRef}
-                  />
-                </Autocomplete>
-              </Box>
+          {selectedModel !== "" && (
+            <div>
+              {/* Range Battery */}
+              <Typography variant="overline">
+                Choose your origin and final destination
+              </Typography>
+              <div className={classes.inputGroup}>
+                <Card className={classes.card}>
+                  <HStack
+                    className={classes.autocompleteBoxes}
+                    justifyContent="space-around"
+                  >
+                    <Box flexGrow={2}>
+                      <Autocomplete>
+                        <Input
+                          type="text"
+                          placeholder="Origin"
+                          ref={originRef}
+                        />
+                      </Autocomplete>
+                    </Box>
+                    <Box flexGrow={2}>
+                      <Autocomplete>
+                        <Input
+                          onChange={(e) => {
+                            setDestinationChange(e.target.value);
+                          }}
+                          type="text"
+                          placeholder="Destination"
+                          ref={destiantionRef}
+                        />
+                      </Autocomplete>
+                    </Box>
+                  </HStack>
+                  <br />
+                </Card>
+              </div>
+              {destinationChange !== "" && (
+                <div className={classes.buttonCalculate}>
+                  <ButtonGroup>
+                    <Button
+                      colorScheme="blue"
+                      type="submit"
+                      onClick={() => {
+                        openNotification("bottomRight");
+                        setCalculateClicked(true);
+                        console.log(destiantionRef);
+                        calculateRoute();
+                      }}
+                    >
+                      Calculate Route
+                    </Button>
+                    <IconButton
+                      aria-label="center back"
+                      icon={<FaTimes />}
+                      onClick={clearRoute}
+                    />
+                  </ButtonGroup>
+                  <br />
+                </div>
+              )}
+            </div>
+          )}
+          <br />
 
-              <ButtonGroup>
-                <Button
-                  colorScheme="pink"
-                  type="submit"
-                  onClick={() => {
-                    console.log(originRef, destiantionRef);
-                    calculateRoute();
-                  }}
-                >
-                  Calculate Route
-                </Button>
-                <IconButton
-                  aria-label="center back"
-                  icon={<FaTimes />}
-                  onClick={clearRoute}
-                />
-              </ButtonGroup>
-            </HStack>
-            <HStack spacing={4} mt={4} justifyContent="space-between">
-              <Text>Distance: {distance} </Text>
-              <Text>Duration: {duration} </Text>
+          <div>
+            <div>
+              <Drawer
+                title="INTERMEDIATE DESTINATION"
+                placement={"right"}
+                width={500}
+                onClose={onClose}
+                open={open}
+                extra={
+                  <Space>
+                    <Button
+                      colorScheme="red"
+                      variant="outline"
+                      size="sm"
+                      onClick={onClose}
+                    >
+                      Cancel
+                    </Button>
+                  </Space>
+                }
+              >
+                <div>
+                  {betweenStop?.charge?.AddressInfo?.AddressLine1 !==
+                  undefined ? (
+                    <Box
+                      display="block"
+                      className={classes.intermedited}
+                      justifyContent="space-between"
+                    >
+                      <Typography
+                        variant="overline"
+                        display="block"
+                        gutterBottom
+                      >
+                        <PlaceDetails
+                          charge={betweenStop.charge}
+                          selected={childClicked}
+                          refProp={elRefs}
+                        />
+                      </Typography>
+                      {calculateClicked && (
+                        <div>
+                          <Typography
+                            fontSize="5rem"
+                            gutterBottom
+                            variant="button"
+                          >
+                            Distance: {distance}{" "}
+                            <IconButton
+                              aria-label="center back"
+                              icon={<FaRoad />}
+                              style={{
+                                backgroundColor: "white",
+                              }}
+                            />
+                          </Typography>
+                          <Typography gutterBottom variant="button">
+                            Duration: {duration}{" "}
+                            <IconButton
+                              aria-label="center back"
+                              icon={<BiTimer />}
+                              style={{
+                                backgroundColor: "white",
+                              }}
+                            />
+                          </Typography>
+                        </div>
+                      )}
+                      <div></div>
+                    </Box>
+                  ) : (
+                    <Box></Box>
+                  )}
+                </div>
+              </Drawer>
+            </div>
+          </div>
+          {/* <div>
+            <ButtonGroup>
+              <Button colorScheme="pink" type="submit" onClick={() => {}}>
+                Calculate Cost and Time
+              </Button>
               <IconButton
                 aria-label="center back"
-                icon={<FaLocationArrow />}
-                isRound
-                onClick={() => {
-                  map.panTo(coordinates);
-                  map.setZoom(15);
-                }}
+                icon={<FaTimes />}
+                onClick={clearRoute}
               />
-            </HStack>
-          </div>
+            </ButtonGroup>
+          </div> */}
         </>
       )}
     </div>

@@ -15,6 +15,7 @@ const Header = ({ setCoordinates }) => {
   const onLoad = (autoC) => setAutocomplete(autoC);
 
   const onPlaceChanged = () => {
+    console.log(autocomplete.getPlace().geometry.location.lat());
     const lat = autocomplete.getPlace().geometry.location.lat();
     const lng = autocomplete.getPlace().geometry.location.lng();
 
@@ -22,29 +23,22 @@ const Header = ({ setCoordinates }) => {
   };
 
   return (
-    <AppBar position="static" className={classes.appBar}>
-      <Toolbar className={classes.toolbar}>
-        <Typography variant="h5" className={classes.title}>
-          iCharge <FontAwesomeIcon icon={faChargingStation} />
-        </Typography>
-        <Box display="flex">
-          <Typography variant="h6" className={classes.searchTitle}>
-            Explore new places
-          </Typography>
-          <Autocomplete onLoad={onLoad} onPlaceChanged={onPlaceChanged}>
-            <div className={classes.search}>
-              <div className={classes.searchIcon}>
-                <SearchIcon />
-              </div>
-              <InputBase
-                placeholder="Search..."
-                classes={{ root: classes.inputRoot, input: classes.inputInput }}
-              />
-            </div>
-          </Autocomplete>
-        </Box>
-      </Toolbar>
-    </AppBar>
+    <Box display="flex">
+      <Typography variant="h6" className={classes.searchTitle}>
+        Find Charges Near you
+      </Typography>
+      <Autocomplete onLoad={onLoad} onPlaceChanged={onPlaceChanged}>
+        <div className={classes.search}>
+          <div className={classes.searchIcon}>
+            <SearchIcon />
+          </div>
+          <InputBase
+            placeholder="Search..."
+            classes={{ root: classes.inputRoot, input: classes.inputInput }}
+          />
+        </div>
+      </Autocomplete>
+    </Box>
   );
 };
 
