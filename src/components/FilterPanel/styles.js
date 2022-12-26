@@ -72,6 +72,7 @@ export default makeStyles((theme) => ({
     marginLeft: "40%",
     marginBottom: "20px",
   },
+
   card: {
     maxWidth: "100%",
     margin: "auto",
@@ -80,6 +81,10 @@ export default makeStyles((theme) => ({
     // "&:hover": {
     //   boxShadow: "0 16px 70px -12.125px rgba(0,0,0,0.3)",
     // },
+  },
+  MuiAvatar: {
+    color: "#fafafa",
+    backgroundColor: "#2a9d8f",
   },
   subheading: {
     lineHeight: 1.8,

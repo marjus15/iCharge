@@ -76,35 +76,19 @@ const PlaceDetails = ({ place, selected, refProp, charge }) => {
       elevation={6}
       className={selected === true ? classes.selectedCard : false}
     >
-      {/* <CardMedia
-        style={{ height: 350 }}
-        image={
-          place.photo
-            ? place.photo.images.large.url
-            : "https://www.foodserviceandhospitality.com/wp-content/uploads/2016/09/Restaurant-Placeholder-001.jpg"
-        }
-        title={place.name}
-      /> */}
       <CardContent>
         <Typography className={classes.ChargeName} gutterBottom variant="h6">
           {charge?.AddressInfo?.Title}
         </Typography>
-        {/* <Box display="flex" justifyContent="space-between" my={2}>
-          <Rating name="read-only" value={Number(place.rating)} readOnly />
-          <Typography component="legend">
-            {place.num_reviews} review{place.num_reviews > 1 && "s"}
-          </Typography>
-        </Box> */}
-        <Box display="flex" justifyContent="space-between">
-          <Typography gutterBottom variant="overline">
-            Cost:
-          </Typography>
-        </Box>
-        <Box display="flex" justifyContent="space-between">
-          <Typography gutterBottom variant="subtitle2">
-            {charge.UsageCost}
-          </Typography>
-        </Box>
+
+        <Typography gutterBottom variant="overline">
+          Cost:
+        </Typography>
+
+        <Typography gutterBottom variant="subtitle2">
+          {charge.UsageCost}
+        </Typography>
+
         <Box display="flex" justifyContent="space-between">
           <Typography variant="overline">Usage Type:</Typography>
         </Box>

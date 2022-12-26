@@ -64,8 +64,11 @@ const App = ({ classes }) => {
   // //---Calculate Route GoogleMap ----//
   const [map, setMap] = useState(/** @type google.maps.Map */ (null));
   const [directionsResponse, setDirectionsResponse] = useState(null);
-  const [distance, setDistance] = useState("");
-  const [duration, setDuration] = useState("");
+  const [distanceAB, setDistanceAB] = useState("");
+  const [distanceAC, setDistanceAC] = useState("");
+
+  const [durationAB, setDurationAB] = useState("");
+  const [durationAC, setDurationAC] = useState("");
 
   const [betweenStop, setBetweenStop] = useState({});
 
@@ -79,9 +82,13 @@ const App = ({ classes }) => {
   async function calculateRoute() {
     var andress = [];
 
-    if (betweenStop.andress !== undefined) {
+    if (betweenStop.charge?.AddressInfo !== undefined) {
       andress.push(
-        betweenStop.andress + "," + betweenStop.town + "," + betweenStop.country
+        betweenStop.charge.AddressInfo.AddressLine1 +
+          "," +
+          betweenStop.charge.AddressInfo.Town +
+          "," +
+          betweenStop.charge.AddressInfo.Country.Title
       );
     }
 
@@ -107,8 +114,10 @@ const App = ({ classes }) => {
               });
 
               // setShowDistance(true);
-              setDistance(results.routes[0].legs[0].distance.text);
-              setDuration(results.routes[0].legs[0].duration.text);
+              setDistanceAB(
+                results.routes[0].legs[0].distance.text.slice(0, 4)
+              );
+              setDurationAB(results.routes[0].legs[0].duration.text);
             } else {
               console.error(`error fetching directions ${results}`);
             }
@@ -130,8 +139,10 @@ const App = ({ classes }) => {
                 lng: results.routes[0].legs[0].end_location.lng(),
               });
               // setShowDistance(true);
-              setDistance(results.routes[0].legs[0].distance.text);
-              setDuration(results.routes[0].legs[0].duration.text);
+              setDistanceAC(
+                results.routes[0].legs[0].distance.text.slice(0, 4)
+              );
+              setDurationAC(results.routes[0].legs[0].duration.text);
             } else {
               console.error(`error fetching directions ${results}`);
             }
@@ -139,12 +150,15 @@ const App = ({ classes }) => {
         );
   }
 
-  console.log(distance, duration);
+  console.log(distanceAB);
+  console.log(distanceAC);
 
   function clearRoute() {
     setDirectionsResponse(null);
-    setDistance("");
-    setDuration("");
+    setDistanceAB("");
+    setDistanceAC("");
+    setDurationAB("");
+    setDurationAC("");
     originRef.current.value = "";
     destiantionRef.current.value = "";
     setBetweenStop({});
@@ -184,47 +198,29 @@ const App = ({ classes }) => {
       <CssBaseline />
 
       <Header />
-      <div className="btnGrid">
-        {/* <FilterListToggle
-          options={categoryList}
-          value={selectedCategory}
-          selectToggle={handleSelectCategory}
-        /> */}
-      </div>
+      <div className="btnGrid"></div>
 
       <Grid container spacing={3} style={{ width: "100%" }}>
-        {/* {selectedCategory === "explore" ? (
-          <Grid item xs={12} md={4}>
-            <List
-              setCoordinates={setCoordinates}
-              chargerCoords={chargerCoords}
-              childClicked={childClicked}
-              // isLoading={isLoading}
-              setRating={setRating}
-              rating={rating}
-              setType={setType}
-              type={type}
-              charges={charges}
-              coordinates={coordinates}
-            />
-          </Grid>
-        ) : ( */}
-
-        <Grid item xs={4} md={5}>
+        <Grid item xs={12} md={5}>
           <FilterPanel
             open={open}
             childClicked={childClicked}
             setOpen={setOpen}
             betweenStop={betweenStop}
+            setBetweenStop={setBetweenStop}
             showDistance={showDistance}
             charges={charges}
             getChargesData={getChargesData}
             map={map}
             setMap={setMap}
-            distance={distance}
-            setDistance={setDistance}
-            duration={duration}
-            setDuration={setDuration}
+            distanceAB={distanceAB}
+            setDistanceAB={setDistanceAB}
+            distanceAC={distanceAC}
+            setDistanceAC={setDistanceAC}
+            durationAB={durationAB}
+            setDurationAB={setDurationAB}
+            durationAC={durationAC}
+            setDurationAC={setDurationAC}
             originRef={originRef}
             destiantionRef={destiantionRef}
             waypoints={waypoints}
@@ -261,8 +257,6 @@ const App = ({ classes }) => {
             setMap={setMap}
             originRef={originRef}
             destiantionRef={destiantionRef}
-            distance={distance}
-            duration={duration}
             map={map}
           />
         </Grid>

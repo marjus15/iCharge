@@ -1,9 +1,22 @@
 import React, { useEffect, createRef } from "react";
 import { FaLocationArrow, FaTimes, FaRoad } from "react-icons/fa";
-import { NotificationOutlined } from "@ant-design/icons";
-import { notification, Drawer, Radio, Space } from "antd";
+import { RiBattery2ChargeLine } from "react-icons/ri";
+import {} from "antd";
+import { NotificationOutlined, InfoCircleOutlined } from "@ant-design/icons";
+import {
+  notification,
+  Drawer,
+  Radio,
+  Space,
+  Col,
+  Row,
+  Statistic,
+  Slider,
+} from "antd";
+
+import { red } from "@material-ui/core/colors";
 import PlaceDetails from "../PlaceDetails/PlaceDetails";
-import { BiTimer } from "react-icons/bi";
+
 import Select from "@material-ui/core/Select/Select";
 import MenuItem from "@material-ui/core/MenuItem/MenuItem";
 import {
@@ -11,8 +24,11 @@ import {
   Typography,
   Card,
   CardContent,
+  CardHeader,
   Grid,
+  Avatar,
 } from "@material-ui/core";
+
 import {
   Box,
   ButtonGroup,
@@ -29,14 +45,17 @@ import { useState } from "react";
 const FilterPanel = ({
   isLoading,
   childClicked,
+  setBetweenStop,
   charges,
   destiantionRef,
   waypoints,
   originRef,
   calculateRoute,
   clearRoute,
-  distance,
-  duration,
+  distanceAB,
+  distanceAC,
+  durationAB,
+  durationAC,
   markList,
   modelList,
   selectedMark,
@@ -51,7 +70,6 @@ const FilterPanel = ({
   setOpen,
   open,
 }) => {
-  console.log(betweenStop);
   const [elRefs, setElRefs] = useState([]);
 
   useEffect(() => {
@@ -62,22 +80,28 @@ const FilterPanel = ({
     setElRefs(refs);
   }, [charges]);
 
-  // const [placement, setPlacement] = useState("right");
-  // const showDrawer = () => {
-  //   setOpen(true);
-  // };
-
   const onClose = () => {
+    setBetweenStop({});
     setOpen(false);
   };
+  const [cost, setCost] = useState({});
+  const [time, setTime] = useState({});
+  const [percentageOfBattery, setPercentageofBattery] = useState(100);
+  const [newValueOfBattery, setNewValueOfofBattery] = useState(
+    Number(selectedModelDetails?.BatteryElectricVehicle)
+  );
+  const [rangeValueAfterCalculation, setRangeValueAfterCalculation] = useState(
+    Number(selectedModelDetails?.Range)
+  );
 
   const [api, contextHolder] = notification.useNotification();
+
   const openNotification = (placement) => {
     api.info({
-      duration: 10,
+      duration: 8,
       message: "Choose your intermediate stop",
       description:
-        "If you want to calculate cost and time please choose a charger from map",
+        "Based on the percentage of the battery your journey is not possible without a intermediate stop.Please choose a charge in map to recharge your car.",
       icon: (
         <NotificationOutlined
           style={{
@@ -89,9 +113,30 @@ const FilterPanel = ({
       style: { backgroundColor: "#e6f7ff" },
     });
   };
+
+  const openNotificationBasedOnBattery = (placement) => {
+    api.info({
+      duration: 8,
+      message: "No need to stop",
+      description:
+        "Based on the percentage of the battery your journey is possible.Have a nice trip and drive carefully",
+      icon: (
+        <InfoCircleOutlined
+          style={{
+            color: "#2a9d8f",
+          }}
+        />
+      ),
+      placement,
+      style: { backgroundColor: "#bfd8bd" },
+    });
+  };
+
   const classes = useStyles();
 
   const [calculateClicked, setCalculateClicked] = useState(false);
+  const [recalculateClicked, setReCalculateClicked] = useState(false);
+
   const [destinationChange, setDestinationChange] = useState("");
 
   const handleFocus = () => {
@@ -106,27 +151,74 @@ const FilterPanel = ({
     }
   };
 
-  // const [autocompleteOrigin, setAutocompleteOrigin] = useState(null);
-  // const [autocompleteDestination, setAutocompleteDestination] = useState(null);
+  useEffect(() => {
+    calculateRoute();
+    console.log("Route Calculated");
+  }, [destinationChange]);
 
-  // const onLoadOrigin = (autoC) => setAutocompleteOrigin(autoC);
-  // const onLoadDestination = (autoC) => setAutocompleteDestination(autoC);
+  const calculateBatteryValueAfterPercentagecard = (percentage) => {
+    if (selectedModel !== "") {
+      let battery = selectedModelDetails?.BatteryElectricVehicle;
 
-  // const onPlaceChangedOrigin = () => {
-  //   const lat = autocompleteOrigin.getPlace().geometry.location.lat();
-  //   const lng = autocompleteOrigin.getPlace().geometry.location.lng();
-  //   // const origin = autocompleteOrigin.getPlace().formatted_address;
+      const batteryValueAfterCalculation = (battery * percentage) / 100;
+      setNewValueOfofBattery(
+        Math.round(batteryValueAfterCalculation.toFixed(2))
+      );
+      let distanceCovered = selectedModelDetails?.Range;
 
-  //   setStartJourney({ lat, lng });
-  // };
+      const newRange =
+        (distanceCovered * batteryValueAfterCalculation) / battery;
+      setRangeValueAfterCalculation(Math.round(newRange.toFixed(2)));
+    }
+  };
 
-  // const onPlaceChangedDestination = () => {
-  //   // const destination = autocompleteDestination.getPlace().formatted_address;
-  //   const lat = autocompleteDestination.getPlace().geometry.location.lat();
-  //   const lng = autocompleteDestination.getPlace().geometry.location.lng();
-  //   console.log(lat, lng);
-  //   setFinaldestination({ lat, lng });
-  // };
+  const calculateBatteryValueAfterPercentage = () => {
+    if (selectedModel !== "") {
+      let battery = selectedModelDetails?.BatteryElectricVehicle;
+
+      const batteryValueAfterCalculation =
+        (battery * percentageOfBattery) / 100;
+      setNewValueOfofBattery(batteryValueAfterCalculation);
+      let distanceCovered = selectedModelDetails?.Range;
+
+      const newRange =
+        (distanceCovered * batteryValueAfterCalculation) / battery;
+      // setRangeValueAfterCalculation(newRange.toFixed(2));
+      console.log(distanceAC, newRange);
+      if (Number(newRange) < Number(distanceAC)) {
+        openNotification("top");
+      } else {
+        openNotificationBasedOnBattery("top");
+      }
+      console.log(newRange.toFixed(2));
+    }
+  };
+
+  const calculateCost = () => {
+    if (
+      selectedModel !== "" &&
+      betweenStop?.charge?.AddressInfo?.AddressLine1 !== undefined
+    ) {
+      let battery = selectedModelDetails?.BatteryElectricVehicle;
+      let costPercharge = 0.1387;
+      const cost = battery * costPercharge;
+
+      setCost(cost.toFixed(2));
+    }
+  };
+
+  const calculateTime = () => {
+    if (
+      selectedModel !== "" &&
+      betweenStop?.charge?.AddressInfo?.AddressLine1 !== undefined
+    ) {
+      let batteryPerCharge = selectedModelDetails?.BatteryElectricVehicle;
+      let powerPerCharge = betweenStop.charge.Connections[0].PowerKW * 0.9;
+      const time = batteryPerCharge / powerPerCharge;
+
+      setTime(time.toFixed(2));
+    }
+  };
 
   return (
     <div className={classes.container}>
@@ -154,7 +246,6 @@ const FilterPanel = ({
                 className={classes.dropdowns}
                 value={selectedMark}
                 onChange={(e) => {
-                  console.log(e.target.value);
                   setSelectedMark(e.target.value);
                   setSelectedModel("");
                 }}
@@ -174,7 +265,6 @@ const FilterPanel = ({
                 className={classes.dropdowns}
                 value={selectedModel}
                 onChange={(e) => {
-                  console.log(e.target.value);
                   setSelectedModel(e.target.value);
                 }}
               >
@@ -188,51 +278,128 @@ const FilterPanel = ({
               </Select>
               <br />
             </div>
-            {selectedModel !== "" ? (
-              <Card className={classes.card}>
-                <CardContent>
-                  <Typography gutterBottom variant="overline">
-                    Battery Electric Vehicle |{" "}
-                    <strong>
-                      {selectedModelDetails?.BatteryElectricVehicle}
-                    </strong>{" "}
-                    kWh
-                  </Typography>
-                  <Box display="flex" justifyContent="space-between">
-                    <Typography gutterBottom variant="overline">
-                      Top Speed |{" "}
-                      <strong>{selectedModelDetails?.TopSpeed}</strong> km/h
-                    </Typography>
-                  </Box>
-                  <Box display="flex" justifyContent="space-between">
-                    <Typography gutterBottom variant="overline">
-                      Range |<strong> {selectedModelDetails?.Range}</strong> km
-                    </Typography>
-                  </Box>
-                  <Box display="flex" justifyContent="space-between">
-                    <Typography gutterBottom variant="overline">
-                      0-100 |<strong> {selectedModelDetails?.First100M}</strong>{" "}
-                      sec
-                    </Typography>
-                  </Box>
-                  <Box display="flex" justifyContent="space-between">
-                    <Typography gutterBottom variant="overline">
-                      Efficiency |
-                      <strong> {selectedModelDetails?.Efficiency}</strong> Wh/km
-                    </Typography>
-                  </Box>
-                  <Box display="flex" justifyContent="space-between">
-                    <Typography gutterBottom variant="overline">
-                      Fastcharge |
-                      <strong> {selectedModelDetails?.Fastcharge}</strong> km/h
-                    </Typography>
-                  </Box>
-                </CardContent>
-              </Card>
-            ) : (
-              <div></div>
+            {selectedModel !== "" && (
+              <div className="space-align-container">
+                <div className="space-align-block">
+                  <Space align="start">
+                    <Card className={classes.card}>
+                      <CardHeader
+                        avatar={
+                          <Avatar
+                            className={classes.MuiAvatar}
+                            aria-label="recipe"
+                          >
+                            100
+                          </Avatar>
+                        }
+                        title="Battery Percentage"
+                      />
+                      <CardContent>
+                        <Typography gutterBottom variant="overline">
+                          Battery Electric Vehicle |{" "}
+                          <strong>
+                            {selectedModelDetails?.BatteryElectricVehicle}
+                          </strong>{" "}
+                          kWh
+                        </Typography>
+                        <Box display="flex" justifyContent="space-between">
+                          <Typography gutterBottom variant="overline">
+                            Top Speed |{" "}
+                            <strong>{selectedModelDetails?.TopSpeed}</strong>{" "}
+                            km/h
+                          </Typography>
+                        </Box>
+                        <Box display="flex" justifyContent="space-between">
+                          <Typography gutterBottom variant="overline">
+                            Range |
+                            <strong> {selectedModelDetails?.Range}</strong> km
+                          </Typography>
+                        </Box>
+                        <Box display="flex" justifyContent="space-between">
+                          <Typography gutterBottom variant="overline">
+                            0-100 |
+                            <strong> {selectedModelDetails?.First100M}</strong>{" "}
+                            sec
+                          </Typography>
+                        </Box>
+                        <Box display="flex" justifyContent="space-between">
+                          <Typography gutterBottom variant="overline">
+                            Efficiency |
+                            <strong> {selectedModelDetails?.Efficiency}</strong>{" "}
+                            Wh/km
+                          </Typography>
+                        </Box>
+                        <Box display="flex" justifyContent="space-between">
+                          <Typography gutterBottom variant="overline">
+                            Fastcharge |
+                            <strong> {selectedModelDetails?.Fastcharge}</strong>{" "}
+                            km/h
+                          </Typography>
+                        </Box>
+                      </CardContent>
+                    </Card>
+                  </Space>
+                  <Space align="start">
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                  </Space>
+                  <Space align="end">
+                    <Card className={classes.card}>
+                      <CardHeader
+                        avatar={
+                          <Avatar
+                            className={classes.MuiAvatar}
+                            aria-label="recipe"
+                          >
+                            {percentageOfBattery}
+                          </Avatar>
+                        }
+                        title="Battery Percentage"
+                      />
+                      <CardContent>
+                        <Typography gutterBottom variant="overline">
+                          Battery Electric Vehicle |{" "}
+                          <strong>{newValueOfBattery}</strong> kWh
+                        </Typography>
+                        <Box display="flex" justifyContent="space-between">
+                          <Typography gutterBottom variant="overline">
+                            &nbsp;
+                          </Typography>
+                        </Box>
+                        <Box display="flex" justifyContent="space-between">
+                          <Typography gutterBottom variant="overline">
+                            Range |
+                            <strong>
+                              {" "}
+                              {newValueOfBattery === 0
+                                ? 0
+                                : rangeValueAfterCalculation}
+                            </strong>{" "}
+                            km
+                          </Typography>
+                        </Box>
+                        <Box display="flex" justifyContent="space-between">
+                          <Typography gutterBottom variant="overline">
+                            &nbsp;
+                          </Typography>
+                        </Box>
+                        <Box display="flex" justifyContent="space-between">
+                          <Typography gutterBottom variant="overline">
+                            &nbsp;
+                          </Typography>
+                        </Box>
+                        <Box display="flex" justifyContent="space-between">
+                          <Typography gutterBottom variant="overline">
+                            &nbsp;
+                          </Typography>
+                        </Box>
+                      </CardContent>
+                    </Card>
+                  </Space>
+                </div>
+              </div>
             )}
           </div>
+
           {selectedModel !== "" && (
             <div>
               {/* Range Battery */}
@@ -269,7 +436,43 @@ const FilterPanel = ({
                   </HStack>
                   <br />
                 </Card>
+                <br />
+                <div>
+                  <Typography variant="overline">
+                    Choose percentage of the battery on starting point
+                  </Typography>
+                  <Slider
+                    defaultValue={100}
+                    tooltip={{
+                      open: true,
+                    }}
+                    onChange={(value) => {
+                      setPercentageofBattery(value);
+                      calculateBatteryValueAfterPercentagecard(value);
+                      calculateRoute();
+                    }}
+                  />
+                </div>
+                <div>
+                  <Row gutter={16}>
+                    <Col span={12}>
+                      <Statistic
+                        title={`Distance: ${originRef?.current?.value} - ${destiantionRef?.current?.value}`}
+                        value={distanceAC}
+                      />
+                    </Col>
+                    <Col span={12}>
+                      <Statistic
+                        title="Duration"
+                        value={durationAC}
+                        precision={2}
+                      />
+                    </Col>
+                  </Row>
+                </div>
               </div>
+
+              <br />
               {destinationChange !== "" && (
                 <div className={classes.buttonCalculate}>
                   <ButtonGroup>
@@ -277,10 +480,8 @@ const FilterPanel = ({
                       colorScheme="blue"
                       type="submit"
                       onClick={() => {
-                        openNotification("bottomRight");
                         setCalculateClicked(true);
-                        console.log(destiantionRef);
-                        calculateRoute();
+                        calculateBatteryValueAfterPercentage();
                       }}
                     >
                       Calculate Route
@@ -296,6 +497,7 @@ const FilterPanel = ({
               )}
             </div>
           )}
+
           <br />
 
           <div>
@@ -320,6 +522,39 @@ const FilterPanel = ({
                 }
               >
                 <div>
+                  {recalculateClicked && (
+                    <div>
+                      <Row gutter={16}>
+                        <Col span={12}>
+                          <Statistic
+                            title={`Distance: ${originRef.current.value} - ${betweenStop?.charge?.AddressInfo?.AddressLine1}`}
+                            value={`${distanceAB} χλμ`}
+                          />
+                        </Col>
+                        <Col span={12}>
+                          <Statistic
+                            title="Duration"
+                            value={durationAB}
+                            precision={2}
+                          />
+                        </Col>
+                        <Col span={12}>
+                          <Statistic
+                            title="Charging cost (average cost)"
+                            value={`${cost} ευρώ`}
+                            precision={2}
+                          />
+                        </Col>
+                        <Col span={12}>
+                          <Statistic
+                            title="Charging time"
+                            value={`${time}  / ώρες`}
+                            precision={2}
+                          />
+                        </Col>
+                      </Row>
+                    </div>
+                  )}
                   {betweenStop?.charge?.AddressInfo?.AddressLine1 !==
                   undefined ? (
                     <Box
@@ -338,35 +573,34 @@ const FilterPanel = ({
                           refProp={elRefs}
                         />
                       </Typography>
+                      <br />
                       {calculateClicked && (
-                        <div>
-                          <Typography
-                            fontSize="5rem"
-                            gutterBottom
-                            variant="button"
-                          >
-                            Distance: {distance}{" "}
+                        <div className={classes.buttonCalculate}>
+                          <ButtonGroup>
+                            <Button
+                              colorScheme="teal"
+                              type="submit"
+                              onClick={() => {
+                                setReCalculateClicked(true);
+                                calculateRoute();
+                                calculateTime();
+                                calculateCost();
+                              }}
+                            >
+                              Re-Calculate Route
+                            </Button>
                             <IconButton
                               aria-label="center back"
-                              icon={<FaRoad />}
-                              style={{
-                                backgroundColor: "white",
+                              icon={<FaTimes />}
+                              onClick={() => {
+                                setOpen(false);
+                                clearRoute();
                               }}
                             />
-                          </Typography>
-                          <Typography gutterBottom variant="button">
-                            Duration: {duration}{" "}
-                            <IconButton
-                              aria-label="center back"
-                              icon={<BiTimer />}
-                              style={{
-                                backgroundColor: "white",
-                              }}
-                            />
-                          </Typography>
+                          </ButtonGroup>
+                          <br />
                         </div>
                       )}
-                      <div></div>
                     </Box>
                   ) : (
                     <Box></Box>
@@ -375,18 +609,6 @@ const FilterPanel = ({
               </Drawer>
             </div>
           </div>
-          {/* <div>
-            <ButtonGroup>
-              <Button colorScheme="pink" type="submit" onClick={() => {}}>
-                Calculate Cost and Time
-              </Button>
-              <IconButton
-                aria-label="center back"
-                icon={<FaTimes />}
-                onClick={clearRoute}
-              />
-            </ButtonGroup>
-          </div> */}
         </>
       )}
     </div>

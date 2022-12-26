@@ -53,7 +53,7 @@ function MapGoogle({
             charges?.map((charge, i) => (
               <Marker
                 onClick={() => {
-                  setOpen(true);
+                  setOpen((prevTrue) => !prevTrue);
                   setBetweenStop({
                     charge,
                   });
